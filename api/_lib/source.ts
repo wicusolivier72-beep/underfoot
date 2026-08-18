@@ -1,4 +1,4 @@
-import type { GeologyResult } from '../../shared/types.ts'
+import type { GeologyResult } from '../../shared/types'
 
 /**
  * One entry in the source router. Adding regional coverage later should only ever mean

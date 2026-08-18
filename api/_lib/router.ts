@@ -1,7 +1,7 @@
-import type { GeologyResponse } from '../../shared/types.ts'
-import type { GeologySource } from './source.ts'
-import { southAfricaGeology1M, southAfricaLithology500k } from './sources/southAfrica.ts'
-import { macrostratGlobal } from './sources/macrostrat.ts'
+import type { GeologyResponse } from '../../shared/types'
+import type { GeologySource } from './source'
+import { southAfricaGeology1M, southAfricaLithology500k } from './sources/southAfrica'
+import { macrostratGlobal } from './sources/macrostrat'
 
 /**
  * Priority-ordered list of registered sources. Adding a new regional source later should

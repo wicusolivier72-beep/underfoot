@@ -1,4 +1,4 @@
-import type { GeologyResponse } from '../../shared/types.ts'
+import type { GeologyResponse } from '../../shared/types'
 
 interface CacheEntry {
   value: GeologyResponse

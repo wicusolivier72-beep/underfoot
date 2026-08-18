@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { GeocodeResponse, GeocodeResult } from '../shared/types.ts'
-import { getUrl, sendJson } from './_lib/http.ts'
+import type { GeocodeResponse, GeocodeResult } from '../shared/types'
+import { getUrl, sendJson, fetchWithTimeout } from './_lib/http'
 
 const ONE_DAY_S = 60 * 60 * 24
 
@@ -23,7 +23,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   try {
     const params = new URLSearchParams({ q, format: 'json', limit: '5' })
-    const upstream = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
+    const upstream = await fetchWithTimeout(`https://nominatim.openstreetmap.org/search?${params.toString()}`, 5000, {
       headers: { 'User-Agent': 'Geog-Geology-Lookup/1.0 (personal project, low volume)' },
     })
     if (!upstream.ok) throw new Error(`Nominatim responded ${upstream.status}`)

@@ -1,9 +1,10 @@
-import type { GeologyResult } from '../../../shared/types.ts'
-import type { GeologySource } from '../source.ts'
-import { MultiHolePolygon } from '../geometry.ts'
-import { SOUTH_AFRICA_POLYGONS } from '../data/southAfricaBoundary.ts'
-import { lookupTimescaleName } from '../timescale.ts'
-import { cleanStr, titleCase } from '../text.ts'
+import type { GeologyResult } from '../../../shared/types'
+import type { GeologySource } from '../source'
+import { MultiHolePolygon } from '../geometry'
+import { SOUTH_AFRICA_POLYGONS } from '../data/southAfricaBoundary'
+import { lookupTimescaleName } from '../timescale'
+import { cleanStr, titleCase } from '../text'
+import { fetchWithTimeout } from '../http'
 
 /**
  * Council for Geoscience / Dept. of Water Affairs ArcGIS REST service. Live and queryable
@@ -28,7 +29,7 @@ async function queryLayer(layer: number, lat: number, lng: number): Promise<Reco
     outFields: '*',
     f: 'json',
   })
-  const res = await fetch(`${ARCGIS_BASE}/${layer}/query?${params.toString()}`)
+  const res = await fetchWithTimeout(`${ARCGIS_BASE}/${layer}/query?${params.toString()}`)
   if (!res.ok) throw new Error(`CGS/DWA ArcGIS layer ${layer} responded ${res.status}`)
   const data = (await res.json()) as { features?: { attributes: Record<string, unknown> }[] }
   return (data.features ?? []).map((f) => f.attributes)

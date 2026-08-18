@@ -1,7 +1,8 @@
-import type { GeologyResult, SourceInfo } from '../../../shared/types.ts'
-import type { GeologySource } from '../source.ts'
-import { lookupTimescaleName } from '../timescale.ts'
-import { cleanStr } from '../text.ts'
+import type { GeologyResult, SourceInfo } from '../../../shared/types'
+import type { GeologySource } from '../source'
+import { lookupTimescaleName } from '../timescale'
+import { cleanStr } from '../text'
+import { fetchWithTimeout } from '../http'
 
 const MACROSTRAT_BASE = 'https://macrostrat.org/api/v2'
 
@@ -26,7 +27,7 @@ interface MacrostratMapResponse {
 
 async function fetchMapUnits(lat: number, lng: number): Promise<{ units: MacrostratMapUnit[]; refs: Record<string, string> }> {
   const params = new URLSearchParams({ lat: String(lat), lng: String(lng), format: 'json' })
-  const res = await fetch(`${MACROSTRAT_BASE}/geologic_units/map?${params.toString()}`)
+  const res = await fetchWithTimeout(`${MACROSTRAT_BASE}/geologic_units/map?${params.toString()}`)
   if (!res.ok) throw new Error(`Macrostrat responded ${res.status}`)
   const data = (await res.json()) as MacrostratMapResponse
   return { units: data.success?.data ?? [], refs: data.success?.refs ?? {} }
@@ -39,7 +40,7 @@ const lithologyNameCache = new Map<number, string | null>()
 async function resolveLithName(lithId: number): Promise<string | null> {
   if (lithologyNameCache.has(lithId)) return lithologyNameCache.get(lithId) ?? null
   try {
-    const res = await fetch(`${MACROSTRAT_BASE}/defs/lithologies?lith_id=${lithId}&format=json`)
+    const res = await fetchWithTimeout(`${MACROSTRAT_BASE}/defs/lithologies?lith_id=${lithId}&format=json`, 3000)
     if (!res.ok) throw new Error(`status ${res.status}`)
     const data = (await res.json()) as { success?: { data?: { name?: string }[] } }
     const name = cleanStr(data.success?.data?.[0]?.name)
