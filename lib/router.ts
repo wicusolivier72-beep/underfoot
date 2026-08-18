@@ -1,4 +1,4 @@
-import type { GeologyResponse } from '../../shared/types.ts'
+import type { GeologyResponse } from '../shared/types.ts'
 import type { GeologySource } from './source.ts'
 import { southAfricaGeology1M, southAfricaLithology500k } from './sources/southAfrica.ts'
 import { macrostratGlobal } from './sources/macrostrat.ts'

@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { GeocodeResponse, GeocodeResult } from '../shared/types.ts'
-import { getUrl, sendJson, fetchWithTimeout } from './_lib/http.ts'
+import { getUrl, sendJson, fetchWithTimeout } from '../lib/http.ts'
 
 const ONE_DAY_S = 60 * 60 * 24
 

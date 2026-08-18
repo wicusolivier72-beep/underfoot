@@ -1,4 +1,4 @@
-import type { GeologyResult } from '../../../shared/types.ts'
+import type { GeologyResult } from '../../shared/types.ts'
 import type { GeologySource } from '../source.ts'
 import { MultiHolePolygon } from '../geometry.ts'
 import { SOUTH_AFRICA_POLYGONS } from '../data/southAfricaBoundary.ts'

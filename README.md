@@ -17,17 +17,25 @@ survey.
   `apiDevMiddleware` in `vite.config.ts`) - no separate backend process or Vercel CLI
   needed locally.
 
-> **Keep the underscore on `api/_lib/`.** Without it, Vercel deploys every individual file
-> inside as its own Lambda function (confirmed via `vercel inspect`: renaming it to `lib/`
-> turned 2 intended functions into 12) - the leading underscore is what excludes a folder
-> from becoming routes. The actual cause of the `FUNCTION_INVOCATION_FAILED` crash this
-> project hit was unrelated and easy to conflate with this: Vercel's Node function builder
-> runs its own separate `tsc` check per `api/*.ts` file, and only follows the *root*
-> `tsconfig.json` - it never resolves `tsconfig.server.json` through the `references` array
-> the way `tsc -b` does locally. With no `compilerOptions` of its own on the root config, api/
-> files failed that check (missing `allowImportingTsExtensions`, missing `node` types) and
-> Vercel silently shipped a broken bundle instead of failing the build loudly. Fixed by giving
-> the root `tsconfig.json` its own matching `compilerOptions` alongside the `references`.
+> **Why `lib/` lives next to `api/`, not inside it.** Two separate, real bugs produced the
+> exact same `FUNCTION_INVOCATION_FAILED` on every deploy, which made this take a lot longer
+> to pin down than it should have:
+>
+> 1. Vercel's Node function builder runs its own separate `tsc` check per `api/*.ts` file,
+>    and only reads the *root* `tsconfig.json` directly - it never resolves
+>    `tsconfig.server.json` through the `references` array the way `tsc -b` does locally.
+>    With no `compilerOptions` of its own on the root config, every api file failed that
+>    check (missing `allowImportingTsExtensions`, missing `node` types). Fixed by giving the
+>    root `tsconfig.json` its own matching `compilerOptions` alongside the `references`.
+> 2. Nesting the shared code as `api/_lib/` (the common convention for "helper code, not a
+>    route") got the routing half right - Vercel didn't deploy it as its own function - but
+>    Vercel's file tracer *also* excludes underscore-prefixed paths from the deployed
+>    function's bundle, not just from routing. Confirmed via `vercel logs --follow`:
+>    `Cannot find module '/var/task/api/_lib/router.ts' imported from
+>    /var/task/api/geology.js` - the file was never copied into the deployment at all.
+>    Moving it to a root-level `lib/` (a sibling of `api/`, same as `shared/`) sidesteps
+>    both problems: Vercel only scans inside `api/` for routes, and file tracing works
+>    normally for anything outside it.
 
 ### maplibre-gl's worker files
 
@@ -55,24 +63,24 @@ bug.
 
 ## Source router
 
-`api/_lib/router.ts` holds a priority-ordered list of `GeologySource` entries
-(`api/_lib/source.ts`). For a given point, each source's `coverageCheck` is tried in order;
+`lib/router.ts` holds a priority-ordered list of `GeologySource` entries
+(`lib/source.ts`). For a given point, each source's `coverageCheck` is tried in order;
 the first one whose `query` returns a feature wins. Adding a new regional source later is a
 config-only change: implement one more `GeologySource` and add it to the list - no other
 code changes required.
 
 Currently registered, in order:
 
-1. **Council for Geoscience — Geology 1:1,000,000** (`api/_lib/sources/southAfrica.ts`,
+1. **Council for Geoscience — Geology 1:1,000,000** (`lib/sources/southAfrica.ts`,
    ArcGIS layer 5) - has real stratigraphic rank/parent/age fields.
 2. **Dept. of Water Affairs — Lithology 1:500,000** (same file, ArcGIS layer 7) - lithology
    and a bare unit name only; no age or rank fields at all. Used as a fallback for points
    layer 5 doesn't cover.
-3. **Macrostrat** (`api/_lib/sources/macrostrat.ts`) - global default, CC-BY 4.0. Always
+3. **Macrostrat** (`lib/sources/macrostrat.ts`) - global default, CC-BY 4.0. Always
    returns *something* for any point on land, tagged as a continental/global-scale estimate.
 
 Both South Africa layers are gated by an actual OpenStreetMap-derived boundary polygon
-(`api/_lib/data/southAfricaBoundary.ts`, includes the Lesotho enclave as a hole), not a
+(`lib/data/southAfricaBoundary.ts`, includes the Lesotho enclave as a hole), not a
 bounding box.
 
 > **Note on priority order:** the two South Africa layers are queried CGS-first,
@@ -103,7 +111,7 @@ Coordinates are rounded to 4 decimal places (~11m, well inside the precision of 
 these maps) both in the browser before the request is built and again in the API handler.
 That makes repeat queries near the same spot hit:
 
-1. The API's in-memory per-instance cache (`api/_lib/cache.ts`).
+1. The API's in-memory per-instance cache (`lib/cache.ts`).
 2. `Cache-Control` headers (`s-maxage`) that let Vercel's CDN and the browser's own HTTP
    cache serve repeat requests without invoking the function at all.
 

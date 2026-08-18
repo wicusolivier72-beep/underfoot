@@ -1,4 +1,4 @@
-import type { GeologyResult, SourceInfo } from '../../../shared/types.ts'
+import type { GeologyResult, SourceInfo } from '../../shared/types.ts'
 import type { GeologySource } from '../source.ts'
 import { lookupTimescaleName } from '../timescale.ts'
 import { cleanStr } from '../text.ts'
