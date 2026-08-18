@@ -2,16 +2,22 @@
 // NOT bundle or reliably trace local relative imports (confirmed via `vercel logs --follow`:
 // ERR_MODULE_NOT_FOUND for lib/*.ts on every deploy, from api/_lib/, from root-level lib/,
 // regardless of structure). The robust fix is to not depend on Vercel's tracer at all: bundle
-// each entry into one fully self-contained .js file ourselves, so there's nothing left for it
-// to fail to find. api/ has zero npm dependencies of its own (just Node built-ins + local
+// each entry into one fully self-contained file ourselves, so there's nothing left for it to
+// fail to find. api/ has zero npm dependencies of its own (just Node built-ins + local
 // files), so this bundle is trivial - no "keep external" list needed beyond esbuild's default
 // node: handling.
 //
+// Vercel determines its function file list from the source tree *before* running this build
+// command, then processes that pre-built list afterward - so replacing api/geology.ts with a
+// same-named api/geology.js (new file, old one deleted) makes it look for a geology.ts that
+// no longer exists ("File not found"). Overwriting each .ts file in place with its bundled
+// JS content (still saved with the .ts extension) avoids that mismatch entirely; plain JS is
+// syntactically valid to save as .ts, since it uses no TypeScript-only syntax after bundling.
+//
 // Only runs on Vercel (guarded by the VERCEL env var Vercel sets automatically) - local dev
-// and `npm run build` elsewhere leave api/*.ts untouched, since Vite's dev middleware
-// (vite.config.ts) and this script both need those source files to exist as-is.
+// and `npm run build` elsewhere leave api/*.ts as real source, since Vite's dev middleware
+// (vite.config.ts) needs it in its original, unbundled form.
 import { build } from 'esbuild'
-import { rmSync } from 'node:fs'
 
 if (process.env.VERCEL !== '1') {
   console.log('[bundle-api] VERCEL env var not set, skipping (only needed for Vercel deploys)')
@@ -20,19 +26,17 @@ if (process.env.VERCEL !== '1') {
 
 const entries = ['api/geology.ts', 'api/geocode.ts']
 
-await build({
-  entryPoints: entries,
-  bundle: true,
-  platform: 'node',
-  format: 'esm',
-  target: 'node20',
-  outdir: 'api',
-  allowOverwrite: true,
-  logLevel: 'info',
-})
-
 for (const entry of entries) {
-  rmSync(entry)
+  await build({
+    entryPoints: [entry],
+    bundle: true,
+    platform: 'node',
+    format: 'esm',
+    target: 'node20',
+    outfile: entry,
+    allowOverwrite: true,
+    logLevel: 'info',
+  })
 }
 
-console.log(`[bundle-api] bundled and replaced ${entries.length} entry point(s) for Vercel`)
+console.log(`[bundle-api] bundled ${entries.length} entry point(s) in place for Vercel`)

@@ -28,9 +28,3 @@ dist-ssr
 
 .vercel
 .env*
-
-# scripts/bundle-api-for-vercel.mjs replaces api/*.ts with bundled .js in Vercel's own build
-# (guarded by the VERCEL env var, never runs locally) - api/ should only ever have .ts source
-# committed; this is a safety net in case that script is ever run locally by accident.
-/api/*.js
-/api/*.js.map
