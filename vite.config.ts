@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 /**
  * Lets `npm run dev` serve api/*.ts the same way Vercel does in production: each file's
  * default export is a (req, res) handler. Vite's ssrLoadModule compiles the TS module graph
- * (including the shared/ and api/lib/ imports) on the fly, so no separate dev server or
+ * (including the shared/ and api/_lib/ imports) on the fly, so no separate dev server or
  * Vercel CLI is needed locally.
  */
 function apiDevMiddleware(): Plugin {

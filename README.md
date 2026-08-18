@@ -17,13 +17,17 @@ survey.
   `apiDevMiddleware` in `vite.config.ts`) - no separate backend process or Vercel CLI
   needed locally.
 
-> **`api/lib/`, not `api/_lib/`:** an underscore prefix is a common convention for "helper
-> code, not a route" under `/api`, but on this project's Vercel deployment it turned out to
-> exclude the folder from the function's dependency bundle entirely, not just from routing -
-> every import from it 500'd with `FUNCTION_INVOCATION_FAILED` (confirmed by isolating it
-> with a diagnostic endpoint that imported one thing from `_lib/` and nothing else). None of
-> the files in `api/lib/` have a default export, so plain `lib/` doesn't risk them becoming
-> routes either - verify that stays true before adding anything there.
+> **Keep the underscore on `api/_lib/`.** Without it, Vercel deploys every individual file
+> inside as its own Lambda function (confirmed via `vercel inspect`: renaming it to `lib/`
+> turned 2 intended functions into 12) - the leading underscore is what excludes a folder
+> from becoming routes. The actual cause of the `FUNCTION_INVOCATION_FAILED` crash this
+> project hit was unrelated and easy to conflate with this: Vercel's Node function builder
+> runs its own separate `tsc` check per `api/*.ts` file, and only follows the *root*
+> `tsconfig.json` - it never resolves `tsconfig.server.json` through the `references` array
+> the way `tsc -b` does locally. With no `compilerOptions` of its own on the root config, api/
+> files failed that check (missing `allowImportingTsExtensions`, missing `node` types) and
+> Vercel silently shipped a broken bundle instead of failing the build loudly. Fixed by giving
+> the root `tsconfig.json` its own matching `compilerOptions` alongside the `references`.
 
 ### maplibre-gl's worker files
 
@@ -51,24 +55,24 @@ bug.
 
 ## Source router
 
-`api/lib/router.ts` holds a priority-ordered list of `GeologySource` entries
-(`api/lib/source.ts`). For a given point, each source's `coverageCheck` is tried in order;
+`api/_lib/router.ts` holds a priority-ordered list of `GeologySource` entries
+(`api/_lib/source.ts`). For a given point, each source's `coverageCheck` is tried in order;
 the first one whose `query` returns a feature wins. Adding a new regional source later is a
 config-only change: implement one more `GeologySource` and add it to the list - no other
 code changes required.
 
 Currently registered, in order:
 
-1. **Council for Geoscience — Geology 1:1,000,000** (`api/lib/sources/southAfrica.ts`,
+1. **Council for Geoscience — Geology 1:1,000,000** (`api/_lib/sources/southAfrica.ts`,
    ArcGIS layer 5) - has real stratigraphic rank/parent/age fields.
 2. **Dept. of Water Affairs — Lithology 1:500,000** (same file, ArcGIS layer 7) - lithology
    and a bare unit name only; no age or rank fields at all. Used as a fallback for points
    layer 5 doesn't cover.
-3. **Macrostrat** (`api/lib/sources/macrostrat.ts`) - global default, CC-BY 4.0. Always
+3. **Macrostrat** (`api/_lib/sources/macrostrat.ts`) - global default, CC-BY 4.0. Always
    returns *something* for any point on land, tagged as a continental/global-scale estimate.
 
 Both South Africa layers are gated by an actual OpenStreetMap-derived boundary polygon
-(`api/lib/data/southAfricaBoundary.ts`, includes the Lesotho enclave as a hole), not a
+(`api/_lib/data/southAfricaBoundary.ts`, includes the Lesotho enclave as a hole), not a
 bounding box.
 
 > **Note on priority order:** the two South Africa layers are queried CGS-first,
@@ -99,7 +103,7 @@ Coordinates are rounded to 4 decimal places (~11m, well inside the precision of 
 these maps) both in the browser before the request is built and again in the API handler.
 That makes repeat queries near the same spot hit:
 
-1. The API's in-memory per-instance cache (`api/lib/cache.ts`).
+1. The API's in-memory per-instance cache (`api/_lib/cache.ts`).
 2. `Cache-Control` headers (`s-maxage`) that let Vercel's CDN and the browser's own HTTP
    cache serve repeat requests without invoking the function at all.
 
