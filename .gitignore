@@ -25,3 +25,6 @@ dist-ssr
 
 # Claude Code local tooling (dev-server launch config for browser preview, not app config)
 .claude/
+
+.vercel
+.env*
