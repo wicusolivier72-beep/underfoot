@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #10141a;
+  --color-surface: #1b222b;
+  --color-surface-2: #242d38;
+  --color-line: #313c48;
+  --color-ink: #eaeff3;
+  --color-ink-muted: #93a1af;
+  --color-accent: #c98a4b;
+  --color-accent-ink: #1b222b;
+
+  --color-era-cenozoic: #f2c94c;
+  --color-era-mesozoic: #56c596;
+  --color-era-paleozoic: #4fa6d8;
+  --color-era-proterozoic: #c2609e;
+  --color-era-archean: #e1673e;
+  --color-era-hadean: #8a5a44;
+
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  color-scheme: dark;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: inherit;
+}
+
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  background: rgba(16, 20, 26, 0.7);
+  color: var(--color-ink-muted);
+}
+
+.maplibregl-ctrl-group {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-line);
+  box-shadow: none !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-line);
+}
+
+.maplibregl-ctrl-icon {
+  filter: invert(1) brightness(1.6);
+}
