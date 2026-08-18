@@ -1,7 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { GeologyResponse } from '../shared/types.ts'
-import { routeGeologyQuery } from './lib/router.ts'
-import { cacheKey, getCached, setCached, roundCoord } from './lib/cache.ts'
 import { getUrl, sendJson } from './lib/http.ts'
 
 const SEVEN_DAYS_S = 60 * 60 * 24 * 7
@@ -26,6 +24,33 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     sendJson(res, 400, body)
     return
   }
+
+  // TEMPORARY DIAGNOSTIC: dynamic + individually-caught imports. A static top-level import
+  // failing at module-load time (before this handler function even exists) is exactly what
+  // Vercel's opaque FUNCTION_INVOCATION_FAILED with zero detail looks like from the outside -
+  // this reports which specific module failed and why, directly in the response.
+  let cacheMod, routerMod
+  try {
+    cacheMod = await import('./lib/cache.ts')
+  } catch (err) {
+    sendJson(res, 500, {
+      found: false,
+      message: `IMPORT FAILED: ./lib/cache.ts :: ${err instanceof Error ? `${err.name}: ${err.message}\n${err.stack}` : String(err)}`,
+    })
+    return
+  }
+  try {
+    routerMod = await import('./lib/router.ts')
+  } catch (err) {
+    sendJson(res, 500, {
+      found: false,
+      message: `IMPORT FAILED: ./lib/router.ts :: ${err instanceof Error ? `${err.name}: ${err.message}\n${err.stack}` : String(err)}`,
+    })
+    return
+  }
+
+  const { cacheKey, getCached, setCached, roundCoord } = cacheMod
+  const { routeGeologyQuery } = routerMod
 
   // Round before caching AND before querying upstream: geology polygons are orders of
   // magnitude coarser than the ~11m this throws away, and it lets the CDN-level HTTP cache
@@ -52,7 +77,10 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     sendJson(res, 200, response, response.found ? SEVEN_DAYS_S : ONE_HOUR_S)
   } catch (err) {
     console.error('[api/geology] unexpected error', err)
-    const body: GeologyResponse = { found: false, message: 'Unexpected error looking up geology data.' }
+    const body: GeologyResponse = {
+      found: false,
+      message: `RUNTIME ERROR :: ${err instanceof Error ? `${err.name}: ${err.message}\n${err.stack}` : String(err)}`,
+    }
     sendJson(res, 500, body)
   }
 }
