@@ -1,8 +1,8 @@
-import type { GeologyResult, SourceInfo } from '../../../shared/types'
-import type { GeologySource } from '../source'
-import { lookupTimescaleName } from '../timescale'
-import { cleanStr } from '../text'
-import { fetchWithTimeout } from '../http'
+import type { GeologyResult, SourceInfo } from '../../../shared/types.ts'
+import type { GeologySource } from '../source.ts'
+import { lookupTimescaleName } from '../timescale.ts'
+import { cleanStr } from '../text.ts'
+import { fetchWithTimeout } from '../http.ts'
 
 const MACROSTRAT_BASE = 'https://macrostrat.org/api/v2'
 

@@ -1,10 +1,10 @@
-import type { GeologyResult } from '../../../shared/types'
-import type { GeologySource } from '../source'
-import { MultiHolePolygon } from '../geometry'
-import { SOUTH_AFRICA_POLYGONS } from '../data/southAfricaBoundary'
-import { lookupTimescaleName } from '../timescale'
-import { cleanStr, titleCase } from '../text'
-import { fetchWithTimeout } from '../http'
+import type { GeologyResult } from '../../../shared/types.ts'
+import type { GeologySource } from '../source.ts'
+import { MultiHolePolygon } from '../geometry.ts'
+import { SOUTH_AFRICA_POLYGONS } from '../data/southAfricaBoundary.ts'
+import { lookupTimescaleName } from '../timescale.ts'
+import { cleanStr, titleCase } from '../text.ts'
+import { fetchWithTimeout } from '../http.ts'
 
 /**
  * Council for Geoscience / Dept. of Water Affairs ArcGIS REST service. Live and queryable
