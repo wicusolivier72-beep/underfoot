@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { GeologyResponse } from '../shared/types.ts'
-import { routeGeologyQuery } from './_lib/router.ts'
-import { cacheKey, getCached, setCached, roundCoord } from './_lib/cache.ts'
-import { getUrl, sendJson } from './_lib/http.ts'
+import { routeGeologyQuery } from './lib/router.ts'
+import { cacheKey, getCached, setCached, roundCoord } from './lib/cache.ts'
+import { getUrl, sendJson } from './lib/http.ts'
 
 const SEVEN_DAYS_S = 60 * 60 * 24 * 7
 const ONE_HOUR_S = 60 * 60
