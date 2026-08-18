@@ -1,6 +1,7 @@
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import { Map, Marker, Source, Layer, NavigationControl, type MapRef, type MapLayerMouseEvent } from '@vis.gl/react-maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import '../lib/maplibreWorker'
 import type { GeoPosition } from '../hooks/useGeolocation'
 import { circlePolygon } from '../lib/geo'
 

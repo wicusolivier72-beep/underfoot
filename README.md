@@ -9,13 +9,26 @@ survey.
 ## Stack
 
 - React + TypeScript + Vite, Tailwind CSS v4, MapLibre GL JS via `@vis.gl/react-maplibre`
-  (no API key; base tiles from [OpenFreeMap](https://openfreemap.org), OSM-derived).
+  (no API key; base tiles are CARTO's free Voyager vector style, OSM-derived).
 - `api/` - one set of Vercel serverless functions (`geology.ts`, `geocode.ts`) that proxy
   the upstream geology APIs (avoids browser CORS), cache responses, and run the
   source-routing logic. No database, no auth.
 - `npm run dev` serves both the frontend and `/api/*` from a single Vite dev server (see
   `apiDevMiddleware` in `vite.config.ts`) - no separate backend process or Vercel CLI
   needed locally.
+
+### maplibre-gl's worker files
+
+maplibre-gl parses vector tiles in a Web Worker that it locates at runtime by guessing a
+path relative to its own module - a guess that only holds if the file is untouched in
+`node_modules`. Both Vite's dev pre-bundler and Rollup's production build relocate/rename
+it, breaking that guess (only the style's flat background layer renders, no tiles, no
+console error). Fixed by keeping real, unhashed copies of `maplibre-gl-worker.mjs` and its
+`maplibre-gl-shared.mjs` sibling in `public/maplibre/` (Vite serves `public/` verbatim in
+both dev and prod, so the two stay correctly co-located) and pointing `setWorkerUrl()` at
+them explicitly (`src/lib/maplibreWorker.ts`). `npm install` re-syncs those copies via the
+`postinstall` script (`scripts/sync-maplibre-worker.mjs`) so upgrading `maplibre-gl` can't
+silently leave them on a stale version.
 
 ## Running locally
 
